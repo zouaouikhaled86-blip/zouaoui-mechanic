@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#071428">
+<title>إدارة الورشة</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#071428;--bg2:#0b1d3a;--card:#0e2346;--line:#1b3a6b;--blue:#1f7bff;--blue2:#0a5fe0;--text:#eaf1ff;--muted:#9db3d6;--ok:#16a34a;--bad:#dc2626;--warn:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;padding-bottom:40px}
+button{font-family:inherit;cursor:pointer}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+.hide{display:none!important}
+
+/* login */
+.login{max-width:380px;margin:0 auto;padding:60px 18px}
+.login .ic{text-align:center;font-size:54px}
+.login h1{text-align:center;font-size:22px;margin:6px 0 20px}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font-size:14px;margin-bottom:4px;color:var(--muted)}
+.field input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--text);font-size:16px}
+.field input:focus{outline:2px solid var(--blue)}
+.btn{display:block;width:100%;padding:13px;border:0;border-radius:12px;background:var(--blue2);color:#fff;font-size:17px;font-weight:700}
+.btn:disabled{opacity:.6}
+.err{margin-top:12px;background:#450a0a;color:#fecaca;border-radius:10px;padding:10px;font-size:14px}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(7,20,40,.97);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.hd b{font-size:17px}
+.hd small{color:var(--muted);display:block;font-size:12px}
+.lo{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:6px 12px;font-size:13px}
+.tabs{display:flex;gap:6px;padding-bottom:10px}
+.tab{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--muted);font-size:14px;font-weight:700}
+.tab.on{background:var(--blue2);border-color:var(--blue2);color:#fff}
+.tab i{font-style:normal;background:rgba(255,255,255,.18);border-radius:10px;padding:0 7px;margin-right:4px;font-size:12px}
+
+/* notif box */
+.nb{margin:12px 0;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px}
+.nb .row{display:flex;gap:8px;margin-top:8px}
+.nb button{flex:1;padding:10px;border-radius:10px;border:0;font-size:14px;font-weight:700;background:var(--blue2);color:#fff}
+.nb button.sec{background:var(--card);border:1px solid var(--line)}
+.nb .st{font-weight:700}
+
+/* filters */
+.flt{display:flex;gap:6px;margin:12px 0;overflow-x:auto}
+.chip{white-space:nowrap;padding:7px 14px;border-radius:20px;border:1px solid var(--line);background:var(--bg2);color:var(--muted);font-size:13px}
+.chip.on{background:var(--card);color:var(--text);border-color:var(--blue)}
+
+/* cards */
+.c{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.c.new{border-color:var(--warn)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.nm{font-size:18px;font-weight:700}
+.badge{font-size:12px;font-weight:700;border-radius:20px;padding:2px 12px;white-space:nowrap}
+.badge.new{background:#78350f;color:#fde68a}
+.badge.confirmed{background:#14532d;color:#bbf7d0}
+.badge.cancelled{background:#450a0a;color:#fecaca}
+.dt{margin:6px 0;font-size:16px;color:#fff;font-weight:700}
+.ln{color:var(--muted);font-size:14px}
+.ln b{color:var(--text)}
+.det{margin-top:6px;background:var(--bg2);border-radius:10px;padding:8px 10px;font-size:14px;white-space:pre-wrap;word-break:break-word}
+.act{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.act a,.act button{flex:1;min-width:90px;text-align:center;padding:10px 6px;border-radius:10px;border:0;font-size:14px;font-weight:700;color:#fff;text-decoration:none}
+.a-call{background:var(--blue2)}
+.a-wa{background:#16a34a}
+.a-ok{background:var(--ok)}
+.a-no{background:var(--bad)}
+.a-back{background:var(--card);border:1px solid var(--line)!important}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.rv .stars{color:#fbbf24;letter-spacing:2px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;color:#0b1d3a;border-radius:12px;padding:10px 18px;font-size:14px;font-weight:700;z-index:50;max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div id="loginView" class="login hide">
+  <div class="ic">⚙️</div>
+  <h1>إدارة ورشة Khaled Zouaoui</h1>
+  <form id="lf">
+    <label class="field"><span>الإيميل</span><input id="em" type="email" autocomplete="username" required dir="ltr"></label>
+    <label class="field"><span>كلمة السر</span><input id="pw" type="password" autocomplete="current-password" required dir="ltr"></label>
+    <button class="btn" id="lb" type="submit">دخول</button>
+    <div id="le" class="err hide"></div>
+  </form>
+</div>
+
+<!-- التطبيق -->
+<div id="appView" class="hide">
+  <header>
+    <div class="wrap">
+      <div class="hd">
+        <div><b>⚙️ إدارة الورشة</b><small id="who"></small></div>
+        <button class="lo" id="lo">خروج</button>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-tab="bk">📅 الحجوزات <i id="nNew">0</i></button>
+        <button class="tab" data-tab="rv">⭐ الآراء <i id="nRv">0</i></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="nb" id="nb">
+      <div class="st" id="nst">الإشعارات: جاري التحقق...</div>
+      <div class="row">
+        <button id="nbtn" class="hide">🔔 فعّل الإشعارات</button>
+        <button id="ntest" class="sec hide">جرّب الإشعار</button>
+      </div>
+    </div>
+
+    <div id="bkView">
+      <div class="flt" id="flt">
+        <button class="chip on" data-f="new">جديد</button>
+        <button class="chip" data-f="confirmed">مؤكد</button>
+        <button class="chip" data-f="cancelled">ملغى</button>
+        <button class="chip" data-f="all">الكل</button>
+      </div>
+      <div id="bkList"></div>
+    </div>
+
+    <div id="rvView" class="hide">
+      <div id="rvList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SB_URL='https://yycmvajlbrtiuytdzdzw.supabase.co';
+const SB_KEY='sb_publishable_2H1ikD8-eq4gJqAMWSj3Zw_92igDt7V';
+const VAPID_PUBLIC='BKGh8S9EtsGAIN1oCm0UyoZbmBKBowWMsoe2O6uDnR-JBj3TcufVrSrhSV1xXjWs-JSayomDyxIVeji_2XgVQiA';
+const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+const $=id=>document.getElementById(id);
+const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const ST={new:'جديد',confirmed:'مؤكد',cancelled:'ملغى'};
+
+let bookings=[],reviews=[],filter='new',tab='bk',timer=null;
+
+function el(tag,attrs,...kids){
+  const e=document.createElement(tag);
+  if(attrs)for(const k in attrs){
+    if(k==='class')e.className=attrs[k];
+    else if(k.startsWith('on'))e.addEventListener(k.slice(2),attrs[k]);
+    else e.setAttribute(k,attrs[k]);
+  }
+  kids.flat().forEach(c=>{if(c==null)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c)});
+  return e;
+}
+function toast(m){const t=el('div',{class:'toast'},m);document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+function fmtDate(d){if(!d)return'';const x=new Date(d+'T12:00:00');return DAYS[x.getDay()]+' '+String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0')+'/'+x.getFullYear()}
+function waNum(p){p=String(p||'').replace(/\D/g,'');return p.startsWith('0')?'213'+p.slice(1):p}
+
+/* ---------- الدخول ---------- */
+function showLogin(msg){
+  $('appView').classList.add('hide');$('loginView').classList.remove('hide');
+  const e=$('le');if(msg){e.textContent=msg;e.classList.remove('hide')}else e.classList.add('hide');
+  clearInterval(timer);
+}
+$('lf').addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  if(!sb){showLogin('تعذّر الاتصال بالخدمة.');return}
+  const b=$('lb');b.disabled=true;b.textContent='جاري الدخول...';
+  const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
+  b.disabled=false;b.textContent='دخول';
+  if(error){showLogin('الإيميل أو كلمة السر غير صحيحة.');return}
+  start();
+});
+$('lo').addEventListener('click',async()=>{await sb.auth.signOut();showLogin()});
+
+/* ---------- البيانات ---------- */
+async function load(){
+  const [b,r]=await Promise.all([sb.rpc('admin_list_bookings'),sb.rpc('admin_list_reviews')]);
+  if(b.error){
+    if(/permission|غير مسموح|not allowed/i.test(b.error.message||'')){await sb.auth.signOut();showLogin('هذا الحساب ليس حساب صاحب الورشة.');return false}
+    toast('تعذّر تحميل الحجوزات');
+  }else bookings=b.data||[];
+  if(!r.error)reviews=r.data||[];
+  render();return true;
+}
+function render(){
+  $('nNew').textContent=bookings.filter(x=>x.status==='new').length;
+  $('nRv').textContent=reviews.filter(x=>!x.approved).length;
+  renderBookings();renderReviews();
+}
+function renderBookings(){
+  const box=$('bkList');box.innerHTML='';
+  let list=bookings.filter(b=>filter==='all'||b.status===filter);
+  if(filter==='confirmed')list.sort((a,b)=>(a.booking_date+a.booking_time).localeCompare(b.booking_date+b.booking_time));
+  else list.sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  if(!list.length){box.appendChild(el('div',{class:'empty'},'ما كاين حتى حجز هنا.'));return}
+  list.forEach(b=>{
+    const car=[b.car_brand,b.car_model,b.car_year].filter(Boolean).join(' ');
+    const acts=[
+      el('a',{class:'a-call',href:'tel:'+(b.phone||'')},'📞 اتصل'),
+      el('a',{class:'a-wa',href:'https://wa.me/'+waNum(b.phone),target:'_blank',rel:'noopener'},'💬 واتساب')
+    ];
+    if(b.status!=='confirmed')acts.push(el('button',{class:'a-ok',onclick:()=>setStatus(b.id,'confirmed')},'✅ تأكيد'));
+    if(b.status!=='cancelled')acts.push(el('button',{class:'a-no',onclick:()=>{if(confirm('تلغي هذا الحجز؟'))setStatus(b.id,'cancelled')}},'❌ إلغاء'));
+    if(b.status!=='new')acts.push(el('button',{class:'a-back',onclick:()=>setStatus(b.id,'new')},'↩ رجّعو جديد'));
+    box.appendChild(el('div',{class:'c '+b.status},
+      el('div',{class:'top'},el('div',{class:'nm'},b.name||'بلا اسم'),el('span',{class:'badge '+b.status},ST[b.status]||b.status)),
+      el('div',{class:'dt'},'📅 '+fmtDate(b.booking_date)+'  ⏰ '+String(b.booking_time||'').slice(0,5)),
+      el('div',{class:'ln'},'📞 ',el('b',{dir:'ltr'},b.phone||'')),
+      el('div',{class:'ln'},'🚗 ',el('b',null,car||'—')),
+      el('div',{class:'ln'},'🔧 ',el('b',null,b.fault_type||'—')),
+      b.fault_details?el('div',{class:'det'},b.fault_details):null,
+      el('div',{class:'act'},acts)
+    ));
+  });
+}
+function renderReviews(){
+  const box=$('rvList');box.innerHTML='';
+  if(!reviews.length){box.appendChild(el('div',{class:'empty'},'ما كاين حتى رأي.'));return}
+  reviews.forEach(r=>{
+    const acts=[];
+    if(!r.approved)acts.push(el('button',{class:'a-ok',onclick:()=>setReview(r.id,true)},'✅ موافقة'));
+    else acts.push(el('button',{class:'a-back',onclick:()=>setReview(r.id,false)},'إخفاء'));
+    acts.push(el('button',{class:'a-no',onclick:()=>{if(confirm('تمسح هذا الرأي؟'))delReview(r.id)}},'🗑 مسح'));
+    box.appendChild(el('div',{class:'c rv '+(r.approved?'confirmed':'new')},
+      el('div',{class:'top'},el('div',{class:'nm'},r.name),el('span',{class:'badge '+(r.approved?'confirmed':'new')},r.approved?'ظاهر':'ينتظر موافقتك')),
+      el('div',{class:'stars'},'★'.repeat(r.rating)+'☆'.repeat(5-r.rating)),
+      el('div',{class:'det'},r.comment),
+      el('div',{class:'act'},acts)
+    ));
+  });
+}
+async function setStatus(id,s){
+  const {error}=await sb.rpc('admin_set_status',{p_id:id,p_status:s});
+  if(error)toast('صرا مشكل: '+error.message);else{toast('تم ✅');await load()}
+}
+async function setReview(id,a){
+  const {error}=await sb.rpc('admin_set_review',{p_id:id,p_approved:a});
+  if(error)toast('صرا مشكل');else{toast('تم ✅');await load()}
+}
+async function delReview(id){
+  const {error}=await sb.rpc('admin_delete_review',{p_id:id});
+  if(error)toast('صرا مشكل');else{toast('تم المسح');await load()}
+}
+
+/* ---------- التبويبات والفلاتر ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  tab=t.dataset.tab;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  $('bkView').classList.toggle('hide',tab!=='bk');$('rvView').classList.toggle('hide',tab!=='rv');
+}));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+  filter=c.dataset.f;
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));
+  renderBookings();
+}));
+
+/* ---------- الإشعارات ---------- */
+function u8(b64){
+  const p='='.repeat((4-b64.length%4)%4);
+  const s=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...s].map(c=>c.charCodeAt(0)));
+}
+const pushOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+
+async function savePush(sub){
+  const j=sub.toJSON();
+  const {error}=await sb.rpc('admin_save_push',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+  return !error;
+}
+async function refreshPushUI(){
+  const st=$('nst'),btn=$('nbtn'),tst=$('ntest');
+  btn.classList.add('hide');tst.classList.add('hide');
+  if(!pushOK()){st.textContent='🔕 هذا المتصفح لا يدعم الإشعارات. افتح الصفحة من كروم.';return}
+  if(Notification.permission==='denied'){st.textContent='🔕 الإشعارات ممنوعة. فعّلها من إعدادات الموقع في كروم.';return}
+  let sub=null;
+  try{const reg=await navigator.serviceWorker.ready;sub=await reg.pushManager.getSubscription()}catch(e){}
+  if(Notification.permission==='granted'&&sub){
+    await savePush(sub);
+    st.textContent='🔔 الإشعارات مفعّلة على هذا التلفون ✅';tst.classList.remove('hide');
+  }else{
+    st.textContent='🔕 الإشعارات غير مفعّلة. فعّلها باش يوصلك كل حجز جديد.';btn.classList.remove('hide');
+  }
+}
+$('nbtn').addEventListener('click',async()=>{
+  if(!pushOK()){toast('المتصفح لا يدعم الإشعارات');return}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){toast('لازم تسمح بالإشعارات');refreshPushUI();return}
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VAPID_PUBLIC)});
+    if(!(await savePush(sub)))toast('تعذّر حفظ الإشعارات');else toast('تم تفعيل الإشعارات ✅');
+  }catch(e){toast('تعذّر التفعيل: '+(e.message||e))}
+  refreshPushUI();
+});
+$('ntest').addEventListener('click',async()=>{
+  const {error}=await sb.rpc('admin_test_push');
+  toast(error?'تعذّر إرسال التجربة':'بعثنا إشعار تجريبي، استنى ثواني ⏳');
+});
+
+/* ---------- التشغيل ---------- */
+async function start(){
+  $('loginView').classList.add('hide');$('appView').classList.remove('hide');
+  const {data}=await sb.auth.getUser();
+  $('who').textContent=(data&&data.user&&data.user.email)||'';
+  const ok=await load();if(!ok)return;
+  refreshPushUI();
+  clearInterval(timer);
+  timer=setInterval(()=>{if(!document.hidden)load()},30000);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!$('appView').classList.contains('hide'))load()});
+
+(async()=>{
+  if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('sw.js')}catch(e){console.warn('sw',e)}}
+  if(!sb){showLogin('تعذّر تحميل المكتبة. تأكد من الانترنت.');return}
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session)start();else showLogin();
+})();
+</script>
+</body>
+</html>
