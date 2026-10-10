@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة الورشة</title>
+<link rel="manifest" href="app-manifest.json">
+<meta name="theme-color" content="#1f2933">
+<link rel="icon" href="icon-192-1.png">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f1f5f9;color:#1f2933}
+header{background:#1f2933;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:18px;margin:0}
+button{font-family:inherit;font-size:15px;border:0;border-radius:8px;padding:10px 12px;cursor:pointer}
+.btn{background:#1f2933;color:#fff}
+.green{background:#16a34a;color:#fff}
+.red{background:#dc2626;color:#fff}
+.gray{background:#e2e8f0;color:#1f2933}
+.blue{background:#2563eb;color:#fff}
+#login{max-width:360px;margin:40px auto;padding:20px;background:#fff;border-radius:12px}
+#login input{width:100%;padding:12px;margin:6px 0;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}
+#login button{width:100%;margin-top:8px}
+#app{display:none;padding:10px}
+.tabs,.filters{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.tabs button,.filters button{flex:1;background:#e2e8f0;color:#1f2933}
+.tabs button.on,.filters button.on{background:#1f2933;color:#fff}
+.card{background:#fff;border-radius:12px;padding:12px;margin:8px 0;box-shadow:0 1px 3px #0002}
+.card h3{margin:0 0 6px;font-size:16px}
+.card p{margin:3px 0;font-size:14px}
+.row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.row button,.row a{flex:1;min-width:70px;text-align:center;text-decoration:none;padding:10px 6px;border-radius:8px;font-size:14px;border:0;color:#fff}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;color:#fff}
+.s-new{background:#f59e0b}.s-confirmed{background:#16a34a}.s-cancelled{background:#dc2626}
+.msg{padding:10px;text-align:center;color:#64748b}
+#err{color:#dc2626;text-align:center;margin-top:8px;min-height:20px}
+.push{display:flex;gap:6px;margin:8px 0}
+.push button{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔧 إدارة الورشة</h1>
+  <button class="gray" id="logoutBtn" style="display:none">خروج</button>
+</header>
+
+<div id="login">
+  <h2 style="margin-top:0">تسجيل الدخول</h2>
+  <input id="email" type="email" placeholder="الإيميل" autocomplete="username">
+  <input id="pass" type="password" placeholder="كلمة السر" autocomplete="current-password">
+  <button class="btn" id="loginBtn">دخول</button>
+  <div id="err"></div>
+</div>
+
+<div id="app">
+  <div class="push">
+    <button class="blue" id="enablePush">🔔 فعّل الإشعارات</button>
+    <button class="gray" id="testPush">جرّب الإشعار</button>
+  </div>
+  <div class="tabs">
+    <button id="tabB" class="on">الحجوزات</button>
+    <button id="tabR">آراء الزبائن</button>
+  </div>
+  <div class="filters" id="filters">
+    <button data-f="new" class="on">جديد</button>
+    <button data-f="confirmed">مؤكد</button>
+    <button data-f="cancelled">ملغى</button>
+    <button data-f="all">الكل</button>
+  </div>
+  <div id="list"><div class="msg">...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SB_URL = 'https://yycmvajlbrtiuytdzdzw.supabase.co';
+var SB_KEY = 'sb_publishable_2H1ikD8-eq4gJqAMWSj3Zw_92igDt7V';
+var VAPID_PUBLIC = 'BKGh8S9EtsGAIN1oCm0UyoZbmBKBowWMsoe2O6uDnR-JBj3TcufVrSrhSV1xXjWs-JSayomDyxIVeji_2XgVQiA';
+var sb = supabase.createClient(SB_URL, SB_KEY);
+var tab = 'b', filter = 'new', timer = null, cache = [];
+var LBL = { 'new': 'جديد', confirmed: 'مؤكد', cancelled: 'ملغى' };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function waNum(p) {
+  var d = String(p || '').replace(/\D/g, '');
+  if (d.indexOf('0') === 0) d = '213' + d.slice(1);
+  return d;
+}
+function fmtDate(d) {
+  if (!d) return '';
+  var days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var x = new Date(d + 'T12:00:00');
+  if (isNaN(x)) return d;
+  var dd = String(x.getDate()).padStart(2, '0');
+  var mm = String(x.getMonth() + 1).padStart(2, '0');
+  return days[x.getDay()] + ' ' + dd + '/' + mm + '/' + x.getFullYear();
+}
+
+function showApp(on) {
+  $('login').style.display = on ? 'none' : 'block';
+  $('app').style.display = on ? 'block' : 'none';
+  $('logoutBtn').style.display = on ? 'inline-block' : 'none';
+  clearInterval(timer);
+  if (on) { load(); timer = setInterval(load, 30000); }
+}
+
+async function doLogin() {
+  $('err').textContent = '';
+  var r = await sb.auth.signInWithPassword({
+    email: $('email').value.trim(),
+    password: $('pass').value
+  });
+  if (r.error) { $('err').textContent = 'الإيميل أو كلمة السر غالطة'; return; }
+  showApp(true);
+}
+
+function bookingCard(b) {
+  var name = b.customer_name || b.name || b.full_name || 'زبون';
+  var phone = b.customer_phone || b.phone || '';
+  var car = [b.car_brand || b.brand, b.car_model || b.model, b.car_year || b.year].filter(Boolean).join(' ');
+  var fault = b.fault_type || b.problem || '';
+  var det = b.fault_details || b.description || '';
+  var time = String(b.booking_time || '').slice(0, 5);
+  var st = b.status || 'new';
+  var h = '<div class="card"><h3>' + esc(name) + ' <span class="tag s-' + esc(st) + '">' + esc(LBL[st] || st) + '</span></h3>';
+  if (phone) h += '<p>📞 ' + esc(phone) + '</p>';
+  if (car) h += '<p>🚗 ' + esc(car) + '</p>';
+  if (fault) h += '<p>🔧 ' + esc(fault) + '</p>';
+  if (det) h += '<p>📝 ' + esc(det) + '</p>';
+  h += '<p>📅 ' + esc(fmtDate(b.booking_date)) + ' ⏰ ' + esc(time) + '</p>';
+  h += '<div class="row">';
+  if (phone) {
+    h += '<a class="blue" href="tel:' + esc(phone) + '">اتصال</a>';
+    h += '<a class="green" href="https://wa.me/' + waNum(phone) + '">واتساب</a>';
+  }
+  if (st !== 'confirmed') h += '<button class="green" data-act="status" data-id="' + esc(b.id) + '" data-v="confirmed">تأكيد</button>';
+  if (st !== 'cancelled') h += '<button class="red" data-act="status" data-id="' + esc(b.id) + '" data-v="cancelled">إلغاء</button>';
+  h += '</div></div>';
+  return h;
+}
+
+function reviewCard(v) {
+  var name = v.name || v.customer_name || v.author || 'زبون';
+  var text = v.comment || v.text || v.content || v.message || '';
+  var stars = v.rating ? ' ' + '⭐'.repeat(Math.min(5, Number(v.rating) || 0)) : '';
+  var ok = v.approved === true;
+  var h = '<div class="card"><h3>' + esc(name) + stars + ' <span class="tag ' + (ok ? 's-confirmed' : 's-new') + '">' + (ok ? 'ظاهر' : 'مخفي') + '</span></h3>';
+  h += '<p>' + esc(text) + '</p><div class="row">';
+  if (!ok) h += '<button class="green" data-act="rev" data-id="' + esc(v.id) + '" data-v="1">موافقة</button>';
+  else h += '<button class="gray" data-act="rev" data-id="' + esc(v.id) + '" data-v="0">إخفاء</button>';
+  h += '<button class="red" data-act="del" data-id="' + esc(v.id) + '">مسح</button>';
+  h += '</div></div>';
+  return h;
+}
+
+async function load() {
+  var box = $('list');
+  try {
+    if (tab === 'b') {
+      var r = await sb.rpc('admin_list_bookings');
+      if (r.error) throw r.error;
+      var rows = (r.data || []).filter(function (b) { return filter === 'all' || (b.status || 'new') === filter; });
+      box.innerHTML = rows.length ? rows.map(bookingCard).join('') : '<div class="msg">ما كاين حتى حجز</div>';
+    } else {
+      var r2 = await sb.rpc('admin_list_reviews');
+      if (r2.error) throw r2.error;
+      var rv = r2.data || [];
+      box.innerHTML = rv.length ? rv.map(reviewCard).join('') : '<div class="msg">ما كاين حتى رأي</div>';
+    }
+  } catch (e) {
+    box.innerHTML = '<div class="msg">خطأ: ' + esc(e.message || e) + '</div>';
+  }
+}
+
+async function onListClick(ev) {
+  var t = ev.target.closest('button[data-act]');
+  if (!t) return;
+  var act = t.getAttribute('data-act');
+  var id = t.getAttribute('data-id');
+  var v = t.getAttribute('data-v');
+  var res;
+  if (act === 'status') {
+    res = await sb.rpc('admin_set_status', { p_id: id, p_status: v });
+  } else if (act === 'rev') {
+    res = await sb.rpc('admin_set_review', { p_id: id, p_approved: v === '1' });
+  } else if (act === 'del') {
+    if (!confirm('تمسح هذا الرأي؟')) return;
+    res = await sb.rpc('admin_delete_review', { p_id: id });
+  }
+  if (res && res.error) { alert('خطأ: ' + res.error.message); return; }
+  load();
+}
+
+function b64(s) {
+  var p = '='.repeat((4 - s.length % 4) % 4);
+  var raw = atob((s + p).replace(/-/g, '+').replace(/_/g, '/'));
+  var a = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) a[i] = raw.charCodeAt(i);
+  return a;
+}
+
+async function enablePush() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('هذا المتصفح ما يدعمش الإشعارات');
+      return;
+    }
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') { alert('لازم تسمح بالإشعارات'); return; }
+    var reg = await navigator.serviceWorker.register('service-worker.js');
+    await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64(VAPID_PUBLIC)
+      });
+    }
+    var j = sub.toJSON();
+    var r = await sb.rpc('admin_save_push', {
+      p_endpoint: j.endpoint,
+      p_p256dh: j.keys.p256dh,
+      p_auth: j.keys.auth
+    });
+    if (r.error) throw r.error;
+    alert('تم تفعيل الإشعارات ✅');
+  } catch (e) {
+    alert('خطأ: ' + (e.message || e));
+  }
+}
+
+async function testPush() {
+  try {
+    var r = await sb.rpc('admin_test_push');
+    if (r.error) throw r.error;
+    alert('تبعث الإشعار، استنى ثواني');
+  } catch (e) {
+    alert('خطأ: ' + (e.message || e));
+  }
+}
+
+function setTab(t) {
+  tab = t;
+  $('tabB').className = t === 'b' ? 'on' : '';
+  $('tabR').className = t === 'r' ? 'on' : '';
+  $('filters').style.display = t === 'b' ? 'flex' : 'none';
+  $('list').innerHTML = '<div class="msg">...</div>';
+  load();
+}
+
+$('loginBtn').onclick = doLogin;
+$('pass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+$('logoutBtn').onclick = async function () { await sb.auth.signOut(); showApp(false); };
+$('enablePush').onclick = enablePush;
+$('testPush').onclick = testPush;
+$('tabB').onclick = function () { setTab('b'); };
+$('tabR').onclick = function () { setTab('r'); };
+$('list').addEventListener('click', onListClick);
+$('filters').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-f]');
+  if (!b) return;
+  filter = b.getAttribute('data-f');
+  var all = $('filters').querySelectorAll('button');
+  for (var i = 0; i < all.length; i++) all[i].className = all[i] === b ? 'on' : '';
+  load();
+});
+
+sb.auth.getSession().then(function (r) { showApp(!!(r.data && r.data.session)); });
+</script>
+</body>
+</html>
