@@ -1,0 +1,15 @@
+{
+  "name": "إدارة ورشة زواوي",
+  "short_name": "الورشة",
+  "start_url": "panel.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2933",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icon-192-1.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512-1.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
