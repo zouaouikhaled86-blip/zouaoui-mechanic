@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1f3a">
+<title>خالد زواوي ميكانيك | حجز موعد</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5f9;color:#172033;line-height:1.7}
+header{background:#0b1f3a;color:white;text-align:center;padding:28px 16px;border-bottom:4px solid #d4a84f}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;color:#e0e7f0}
+main{max-width:620px;margin:24px auto;padding:0 14px}
+.card{background:white;border-radius:14px;padding:22px;box-shadow:0 5px 22px #15223812}
+h2{margin-top:0;color:#0b1f3a}
+label{display:block;margin:15px 0 7px;font-weight:bold}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#172033;font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #d4a84f;border-color:#d4a84f}
+button{width:100%;margin-top:22px;padding:14px;background:#0b1f3a;color:white;border:0;border-radius:9px;font:inherit;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+select:disabled{background:#eef1f5;color:#8a94a6}
+#message{display:none;padding:12px;margin-top:15px;border-radius:8px;overflow-wrap:anywhere}
+.info{margin-top:18px;padding:14px;background:#edf2f8;border-radius:10px}
+footer{text-align:center;padding:20px;color:#596579;font-size:14px}
+</style>
+</head>
+
+<body>
+<header>
+<a href="index.html" style="display:block;text-align:right;color:#e0e7f0;font-size:14px;margin-bottom:8px">← الرئيسية</a>
+<img src="khaled.jpg" alt="خالد زواوي" width="120" height="120" style="width:120px;height:120px;max-width:120px;border-radius:50%;object-fit:cover;object-position:58% 25%;border:3px solid #d4a84f;margin:0 auto 10px;display:block">
+<h1>خالد زواوي ميكانيك</h1>
+<p>احجز موعد إصلاح سيارتك بسهولة</p>
+</header>
+
+<main>
+<section class="card">
+<h2>طلب حجز موعد</h2>
+<p>عمّر المعلومات التالية لإرسال طلب الحجز.</p>
+
+<form id="bookingForm" novalidate>
+<label for="full_name">الاسم الكامل *</label>
+<input id="full_name" required maxlength="100" autocomplete="name">
+
+<label for="phone">رقم الهاتف * (مثال: 0664919754)</label>
+<input id="phone" type="tel" inputmode="numeric" required maxlength="10" autocomplete="tel">
+
+<label for="brandSel">ماركة السيارة *</label>
+<select id="brandSel" required>
+<option value="">اختر الماركة</option>
+</select>
+<input id="brand" type="hidden">
+<input id="brandOther" maxlength="60" placeholder="اكتب الماركة" style="display:none;margin-top:8px">
+
+<label for="modelSel">موديل السيارة</label>
+<select id="modelSel" disabled>
+<option value="">اختر الماركة أولا</option>
+</select>
+<input id="model" type="hidden">
+<input id="modelOther" maxlength="60" placeholder="اكتب الموديل" style="display:none;margin-top:8px">
+
+<label for="year">سنة الصنع</label>
+<input id="year" type="number" inputmode="numeric" min="1950" max="2035" step="1">
+
+<label for="problem">نوع العطل</label>
+<select id="problem">
+<option value="">اختر نوع العطل</option>
+<option>المحرك</option>
+<option>التوزيع والسلسلة</option>
+<option>رأس المحرك (الكولاص)</option>
+<option>الفرامل</option>
+<option>القابض (الإمبرياج)</option>
+<option>الكهرباء</option>
+<option>الصيانة الدورية</option>
+<option>عطل آخر</option>
+</select>
+
+<label for="description">تفاصيل العطل</label>
+<textarea id="description" rows="3" maxlength="1000"></textarea>
+
+<label for="date">تاريخ الموعد *</label>
+<input id="date" type="date" required>
+
+<label for="time">وقت الموعد *</label>
+<select id="time" required>
+<option value="">اختر الوقت</option>
+<option value="08:00">08:00 صباحًا</option>
+<option value="09:00">09:00 صباحًا</option>
+<option value="10:00">10:00 صباحًا</option>
+<option value="14:00">14:00</option>
+<option value="15:00">15:00</option>
+<option value="16:00">16:00</option>
+</select>
+
+<button id="submitButton" type="submit">تأكيد الحجز</button>
+<div id="message" role="status" aria-live="polite"></div>
+</form>
+
+<div class="info">
+<strong>معلومات الورشة</strong><br>
+أوقات العمل: 08:00–11:00 و14:00–17:00<br>
+يوم الجمعة: مغلق<br>
+الهاتف: 0664 91 97 54
+</div>
+</section>
+</main>
+
+<footer>خالد زواوي ميكانيك © 2026</footer>
+
+<script>
+var CARS = {
+"Renault":["Clio 4","Clio 5","Symbol","Megane","Logan","Kangoo","Master","Captur","Duster","Express"],
+"Peugeot":["208","301","308","508","2008","3008","Partner","Expert","Boxer","206","207"],
+"Dacia":["Logan","Sandero","Duster","Dokker","Lodgy"],
+"Hyundai":["i10","i20","Accent","Elantra","Tucson","Creta","H100","Santa Fe"],
+"Kia":["Picanto","Rio","Cerato","Sportage","Sorento","Seltos"],
+"Toyota":["Yaris","Corolla","Hilux","Land Cruiser","RAV4","Auris"],
+"Volkswagen":["Polo","Golf","Passat","Tiguan","Caddy","Jetta"],
+"Fiat":["Panda","Tipo","500","Doblo","Punto","Ducato"],
+"Chery":["Tiggo 2","Tiggo 3","Tiggo 7","QQ","Arrizo 5"],
+"Geely":["Emgrand","GC6","Coolray","CK"],
+"Skoda":["Fabia","Octavia","Rapid","Superb"],
+"Seat":["Ibiza","Leon","Toledo"],
+"Citroen":["C3","C4","Berlingo","C-Elysee","Jumpy"],
+"Suzuki":["Swift","Celerio","Vitara","Alto"],
+"Nissan":["Qashqai","Micra","Juke","Navara"],
+"Ford":["Fiesta","Focus","Transit","Ranger"],
+"Opel":["Corsa","Astra","Insignia"],
+"Mercedes":["Classe A","Classe C","Sprinter","Vito"],
+"BMW":["Serie 1","Serie 3","Serie 5","X5"],
+"Audi":["A3","A4","A6","Q5"],
+"Mazda":["Mazda 2","Mazda 3","Mazda 6","CX-5"],
+"Mitsubishi":["L200","Lancer","Pajero"],
+"Isuzu":["D-Max"],
+"Iveco":["Daily"]
+};
+</script>
+
+<script>
+(function(){
+var bS=document.getElementById("brandSel"),mS=document.getElementById("modelSel");
+var bO=document.getElementById("brandOther"),mO=document.getElementById("modelOther");
+var bH=document.getElementById("brand"),mH=document.getElementById("model");
+Object.keys(CARS).sort().forEach(function(b){bS.add(new Option(b,b));});
+bS.add(new Option("أخرى","__other"));
+function sync(){
+ bH.value=bS.value==="__other"?bO.value.trim():bS.value;
+ mH.value=(mS.value==="__other"||bS.value==="__other")?mO.value.trim():mS.value;
+}
+bS.addEventListener("change",function(){
+ mS.innerHTML="";
+ if(bS.value==="__other"){
+  bO.style.display="block";bO.required=true;
+  mS.disabled=true;mS.add(new Option("اكتب الموديل تحت",""));
+  mO.style.display="block";
+ }else{
+  bO.style.display="none";bO.required=false;bO.value="";
+  mO.style.display="none";mO.value="";
+  if(bS.value){
+   mS.disabled=false;mS.add(new Option("اختر الموديل",""));
+   CARS[bS.value].forEach(function(m){mS.add(new Option(m,m));});
+   mS.add(new Option("أخرى","__other"));
+  }else{mS.disabled=true;mS.add(new Option("اختر الماركة أولا",""));}
+ }
+ sync();
+});
+mS.addEventListener("change",function(){
+ if(mS.value==="__other"){mO.style.display="block";}
+ else if(bS.value!=="__other"){mO.style.display="none";mO.value="";}
+ sync();
+});
+bO.addEventListener("input",sync);
+mO.addEventListener("input",sync);
+document.getElementById("bookingForm").addEventListener("reset",function(){
+ setTimeout(function(){bS.dispatchEvent(new Event("change"));},0);
+},false);
+document.getElementById("bookingForm").addEventListener("submit",sync,true);
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// @ts-nocheck
+"use strict";
+
+const SUPABASE_URL = "https://yycmvajlbrtiuytdzdzw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_2H1ikD8-eq4gJqAMWSj3Zw_92igDt7V";
+
+const HEAVY = ["المحرك", "رأس المحرك (الكولاص)", "التوزيع والسلسلة"];
+
+const form = document.getElementById("bookingForm");
+const dateInput = document.getElementById("date");
+const timeSelect = document.getElementById("time");
+const problemSelect = document.getElementById("problem");
+const message = document.getElementById("message");
+const button = document.getElementById("submitButton");
+
+let db = null;
+let booked = [];
+
+function getDb() {
+  if (!db && window.supabase) {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  return db;
+}
+
+function showMessage(text, success) {
+  message.style.display = "block";
+  message.style.background = success ? "#dcfce7" : "#fee2e2";
+  message.style.color = success ? "#166534" : "#991b1b";
+  message.textContent = text;
+}
+
+function localDate() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
+function isFriday(value) {
+  return new Date(value + "T12:00:00").getDay() === 5;
+}
+
+Array.from(timeSelect.options).forEach(function (o) {
+  o.dataset.label = o.textContent;
+});
+
+async function loadBooked() {
+  const c = getDb();
+  if (!c) return;
+  try {
+    const r = await c.rpc("get_booked_slots");
+    if (!r.error && r.data) booked = r.data;
+  } catch (e) {
+    console.error(e);
+  }
+  refreshAvailability();
+}
+
+function refreshAvailability() {
+  const isHeavy = HEAVY.indexOf(problemSelect.value) !== -1;
+  let day = dateInput.value
+    ? booked.filter(function (b) { return b.booking_date === dateInput.value; })
+    : [];
+
+  const dayHeavy = day.some(function (b) { return b.is_heavy; });
+
+  if (dayHeavy) {
+    dateInput.value = "";
+    day = [];
+    showMessage("هذا اليوم محجوز، اختر يومًا آخر.", false);
+  } else if (isHeavy && day.length > 0) {
+    dateInput.value = "";
+    day = [];
+    showMessage("هذا العطل يحتاج يومًا كاملًا وهذا اليوم مشغول، اختر يومًا آخر.", false);
+  }
+
+  Array.from(timeSelect.options).forEach(function (o) {
+    if (!o.value) return;
+    const taken = day.some(function (b) {
+      return String(b.booking_time).slice(0, 5) === o.value;
+    });
+    o.disabled = taken;
+    o.textContent = o.dataset.label + (taken ? " — محجوز" : "");
+  });
+
+  if (timeSelect.selectedOptions[0] && timeSelect.selectedOptions[0].disabled) {
+    timeSelect.value = "";
+  }
+}
+
+dateInput.min = localDate();
+
+dateInput.addEventListener("change", function () {
+  if (!dateInput.value) return;
+  if (isFriday(dateInput.value)) {
+    dateInput.value = "";
+    showMessage("الورشة مغلقة يوم الجمعة. اختر يومًا آخر.", false);
+    return;
+  }
+  message.style.display = "none";
+  refreshAvailability();
+});
+
+problemSelect.addEventListener("change", refreshAvailability);
+
+window.addEventListener("load", loadBooked);
+
+form.addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  if (!form.reportValidity()) return;
+
+  const name = document.getElementById("full_name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const brand = document.getElementById("brand").value.trim();
+  const model = document.getElementById("model").value.trim();
+  const yearText = document.getElementById("year").value.trim();
+  const problem = problemSelect.value;
+  const description = document.getElementById("description").value.trim();
+  const time = timeSelect.value;
+  const year = yearText ? Number(yearText) : null;
+
+  if (!name) { showMessage("اكتب الاسم الكامل.", false); return; }
+
+  if (!/^0[567][0-9]{8}$/.test(phone)) {
+    showMessage("رقم الهاتف غير صحيح. مثال: 0664919754", false);
+    return;
+  }
+
+  if (!brand) { showMessage("اكتب ماركة السيارة.", false); return; }
+
+  if (year !== null && (!Number.isInteger(year) || year < 1950 || year > 2035)) {
+    showMessage("تحقق من سنة صنع السيارة.", false);
+    return;
+  }
+
+  if (!dateInput.value || dateInput.value < localDate()) {
+    showMessage("اختر تاريخًا من اليوم أو بعده.", false);
+    return;
+  }
+
+  if (isFriday(dateInput.value)) {
+    showMessage("الورشة مغلقة يوم الجمعة.", false);
+    return;
+  }
+
+  if (!time) { showMessage("اختر وقت الموعد.", false); return; }
+
+  const c = getDb();
+  if (!c) {
+    showMessage("تعذر تحميل Supabase. تحقق من الإنترنت.", false);
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "جاري إرسال الحجز...";
+  message.style.display = "none";
+
+  try {
+    const result = await c.rpc("create_booking", {
+      p_name: name,
+      p_phone: phone,
+      p_brand: brand,
+      p_model: model || null,
+      p_year: year,
+      p_fault_type: problem || null,
+      p_fault_details: description || null,
+      p_date: dateInput.value,
+      p_time: time
+    });
+
+    if (result.error) throw result.error;
+
+    if (!result.data) {
+      throw new Error("لم يصل تأكيد الحفظ من قاعدة البيانات");
+    }
+
+    showMessage(
+      "تم حفظ طلب الحجز بنجاح ✅ رقم الحجز: " + result.data +
+      ". سنتواصل معك لتأكيد الموعد.",
+      true
+    );
+
+    form.reset();
+    dateInput.min = localDate();
+    refreshAvailability();
+    loadBooked();
+
+  } catch (error) {
+    console.error("Supabase error:", error);
+    showMessage(
+      "تعذر حفظ الحجز: " + (error.message || "خطأ غير معروف"),
+      false
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "تأكيد الحجز";
+  }
+});
+</script>
+</body>
+</html>
